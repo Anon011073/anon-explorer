@@ -17,4 +17,9 @@ class App {
         $config = self::get('config');
         return $config[$key] ?? $default;
     }
+
+    public static function url($path = '') {
+        $base = self::get('base_path');
+        return $base . '/' . ltrim($path, '/');
+    }
 }

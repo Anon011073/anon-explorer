@@ -36,8 +36,6 @@ if (file_exists(__DIR__ . '/../storage/install.lock')) {
     }
 }
 
-App::setContainer($container);
-
 // Router Setup
 $dispatcher = FastRoute\simpleDispatcher(function(FastRoute\RouteCollector $r) {
     $r->addRoute('GET', '/', 'App\Controllers\HomeController@index');
@@ -97,11 +95,24 @@ if (false !== $pos = strpos($uri, '?')) {
 $uri = rawurldecode($uri);
 
 // For subdirectory support (like in Laragon/XAMPP)
-$scriptName = dirname($_SERVER['SCRIPT_NAME']);
-if ($scriptName !== '/' && strpos($uri, $scriptName) === 0) {
-    $uri = substr($uri, strlen($scriptName));
+$scriptName = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+$basePath = ($scriptName === '/' || $scriptName === '\\') ? '' : $scriptName;
+
+if ($basePath !== '' && strpos($uri, $basePath) === 0) {
+    $uri = substr($uri, strlen($basePath));
 }
 if ($uri === '') $uri = '/';
+
+$container->set('base_path', $basePath);
+
+App::setContainer($container);
+
+// Check for installer
+$installPath = $basePath . '/install';
+if (!file_exists(__DIR__ . '/../storage/install.lock') && $uri !== '/install') {
+    header('Location: ' . $installPath);
+    exit;
+}
 
 $routeInfo = $dispatcher->dispatch($httpMethod, $uri);
 switch ($routeInfo[0]) {

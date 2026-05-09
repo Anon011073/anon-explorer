@@ -1,7 +1,7 @@
 <?php
 $content = ob_start(); ?>
 
-<form class="space-y-6" action="/register" method="POST">
+<form class="space-y-6" action="<?= \App\Core\App::url('/register') ?>" method="POST">
     <input type="hidden" name="csrf_token" value="<?= \App\Core\CSRF::generate() ?>">
     <?php if (isset($error)): ?>
         <div class="bg-red-900/50 border border-red-500 text-red-200 p-3 rounded text-sm">
@@ -37,7 +37,7 @@ $content = ob_start(); ?>
 </form>
 
 <div class="mt-6 text-center">
-    <a href="/login" class="text-sm font-medium text-blue-400 hover:text-blue-300">
+    <a href="<?= \App\Core\App::url('/login') ?>" class="text-sm font-medium text-blue-400 hover:text-blue-300">
         Already have an account? Sign in
     </a>
 </div>

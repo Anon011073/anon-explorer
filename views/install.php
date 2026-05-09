@@ -21,7 +21,7 @@
             <?php endforeach; ?>
         </div>
 
-        <form action="/install" method="POST" class="space-y-4">
+        <form action="<?= \App\Core\App::url('/install') ?>" method="POST" class="space-y-4">
             <h3 class="text-xs font-bold uppercase tracking-widest text-slate-500">Admin Account</h3>
             <input type="text" name="admin_user" placeholder="Admin Username" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
             <input type="password" name="admin_pass" placeholder="Admin Password" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">

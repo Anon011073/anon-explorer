@@ -51,14 +51,14 @@
                     <i data-lucide="database" class="w-5 h-5"></i>
                     Root Browser
                 </a>
-                <a href="/admin" class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors border-t border-slate-800/50 mt-4">
+                <a href="<?= \App\Core\App::url('/admin') ?>" class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors border-t border-slate-800/50 mt-4">
                     <i data-lucide="shield-check" class="w-5 h-5"></i>
                     Admin Panel
                 </a>
                 <?php endif; ?>
 
                 <div class="pt-4 pb-2 text-[10px] font-semibold text-slate-600 uppercase tracking-wider px-3">Other</div>
-                <a href="/profile" class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors">
+                <a href="<?= \App\Core\App::url('/profile') ?>" class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors">
                     <i data-lucide="user" class="w-5 h-5"></i>
                     My Profile
                 </a>
@@ -90,7 +90,7 @@
                         <p class="text-sm font-medium text-white truncate"><?= $_SESSION['username'] ?? 'User' ?></p>
                         <p class="text-xs text-slate-500 truncate"><?= ucfirst($_SESSION['role'] ?? 'user') ?></p>
                     </div>
-                    <a href="/logout" class="text-slate-500 hover:text-white transition-colors">
+                    <a href="<?= \App\Core\App::url('/logout') ?>" class="text-slate-500 hover:text-white transition-colors">
                         <i data-lucide="log-out" class="w-4 h-4"></i>
                     </a>
                 </div>
