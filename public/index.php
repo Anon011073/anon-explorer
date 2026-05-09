@@ -21,17 +21,19 @@ $container->set('config', [
     'uploads_path' => __DIR__ . '/../storage/uploads',
 ]);
 
-// Database Connection
-try {
-    $dbPath = $container->get('config')['db_path'];
-    $pdo = new PDO("sqlite:" . $dbPath);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-    $container->set('db', $pdo);
-    \App\Core\Database::init($pdo);
-    \App\Core\Settings::load($pdo);
-} catch (PDOException $e) {
-    die("Could not connect to the database: " . $e->getMessage());
+// Database Connection (Only if installed)
+if (file_exists(__DIR__ . '/../storage/install.lock')) {
+    try {
+        $dbPath = $container->get('config')['db_path'];
+        $pdo = new PDO("sqlite:" . $dbPath);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+        $container->set('db', $pdo);
+        \App\Core\Database::init($pdo);
+        \App\Core\Settings::load($pdo);
+    } catch (PDOException $e) {
+        die("Could not connect to the database: " . $e->getMessage());
+    }
 }
 
 App::setContainer($container);
