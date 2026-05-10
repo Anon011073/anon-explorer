@@ -23,14 +23,9 @@ $container->set('config', [
 
 // --- Robust Subdirectory & URL Detection ---
 $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
-$scriptDir = str_replace('\\', '/', dirname($scriptName));
-if (strtolower(basename($scriptDir)) === 'public') {
-    $basePath = dirname($scriptDir);
-} else {
-    $basePath = $scriptDir;
-}
-$basePath = rtrim(str_replace('\\', '/', $basePath), '/');
-if ($basePath === '/' || $basePath === '.') $basePath = '';
+$basePath = rtrim(dirname($scriptName), '/\\');
+$basePath = preg_replace('/\/public$/i', '', $basePath);
+if ($basePath === '/' || $basePath === '\\' || $basePath === '.') $basePath = '';
 
 $container->set('base_path', $basePath);
 
@@ -70,13 +65,14 @@ if (file_exists(__DIR__ . '/../storage/install.lock')) {
         \App\Core\Database::init($pdo);
         \App\Core\Settings::load($pdo);
     } catch (Exception $e) {
-        if (str_contains($_SERVER['REQUEST_URI'] ?? '', '/api/')) {
+        if (str_contains($requestUri, '/api/')) {
             header('Content-Type: application/json');
             die(json_encode(['success' => false, 'message' => $e->getMessage()]));
         }
         die("<div style='font-family:sans-serif;padding:2rem;background:#fef2f2;color:#991b1b;border:1px solid #f87171;border-radius:0.5rem;max-width:600px;margin:2rem auto;'>
             <h3 style='margin-top:0'>System Error</h3>
-            <p>" . htmlspecialchars($e->getMessage()) . "</p>
+            <p>" . $e->getMessage() . "</p>
+            <p>Ensure the <b>storage</b> directory is writable.</p>
         </div>");
     }
 }
@@ -132,6 +128,7 @@ switch ($routeInfo[0]) {
         echo "404 Not Found (URI: " . htmlspecialchars($uri) . ")";
         break;
     case FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
+        $allowedMethods = $routeInfo[1];
         http_response_code(405);
         echo '405 Method Not Allowed';
         break;

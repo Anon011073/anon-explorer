@@ -25,20 +25,20 @@
             </div>
 
             <nav class="flex-1 overflow-y-auto p-4 space-y-2">
-                <a href="/" class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors">
+                <a href="<?= \App\Core\App::url('/') ?>" class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors">
                     <i data-lucide="arrow-left" class="w-5 h-5"></i>
                     Back to Drive
                 </a>
                 <div class="pt-4 pb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Management</div>
-                <a href="/admin" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= $_SERVER['REQUEST_URI'] === '/admin' ? 'bg-blue-600/10 text-blue-400 font-medium' : 'text-slate-400 hover:bg-slate-800' ?>">
+                <a href="<?= \App\Core\App::url('/admin') ?>" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= str_ends_with($_SERVER['REQUEST_URI'], '/admin') ? 'bg-blue-600/10 text-blue-400 font-medium' : 'text-slate-400 hover:bg-slate-800' ?>">
                     <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
                     Dashboard
                 </a>
-                <a href="/admin/users" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= $_SERVER['REQUEST_URI'] === '/admin/users' ? 'bg-blue-600/10 text-blue-400 font-medium' : 'text-slate-400 hover:bg-slate-800' ?>">
+                <a href="<?= \App\Core\App::url('/admin/users') ?>" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= str_contains($_SERVER['REQUEST_URI'], '/admin/users') ? 'bg-blue-600/10 text-blue-400 font-medium' : 'text-slate-400 hover:bg-slate-800' ?>">
                     <i data-lucide="users" class="w-5 h-5"></i>
                     Users
                 </a>
-                <a href="/admin/settings" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= $_SERVER['REQUEST_URI'] === '/admin/settings' ? 'bg-blue-600/10 text-blue-400 font-medium' : 'text-slate-400 hover:bg-slate-800' ?>">
+                <a href="<?= \App\Core\App::url('/admin/settings') ?>" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= str_contains($_SERVER['REQUEST_URI'], '/admin/settings') ? 'bg-blue-600/10 text-blue-400 font-medium' : 'text-slate-400 hover:bg-slate-800' ?>">
                     <i data-lucide="settings" class="w-5 h-5"></i>
                     System Settings
                 </a>

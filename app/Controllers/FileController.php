@@ -22,11 +22,13 @@ class FileController {
         $this->context = $_GET['context'] ?? 'private';
 
         if ($this->context === 'public') {
-            $publicPath = Settings::get('public_path', App::config('uploads_path') . '/public');
+            $publicPath = Settings::get('public_path');
+            if (!$publicPath) $publicPath = App::config('uploads_path') . '/public';
             if (!is_dir($publicPath)) mkdir($publicPath, 0777, true);
             $this->storage = new StorageService($publicPath);
         } elseif ($this->context === 'root' && AuthService::isAdmin()) {
-            $rootPath = Settings::get('root_path', realpath(__DIR__ . '/../../'));
+            $rootPath = Settings::get('root_path');
+            if (!$rootPath) $rootPath = realpath(__DIR__ . '/../../');
             $this->storage = new StorageService($rootPath);
         } else {
             $this->context = 'private';

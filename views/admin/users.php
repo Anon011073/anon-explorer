@@ -84,16 +84,18 @@
                 this.editingUser = {...user};
             },
             async saveUser() {
-                const response = await fetch('/admin/users/update', {
+                const response = await fetch('<?= \App\Core\App::url('/admin/users/update') ?>', {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(this.editingUser)
                 });
                 if ((await response.json()).success) location.reload();
             },
             async deleteUser(id) {
                 if (!confirm('Are you sure you want to delete this user?')) return;
-                const response = await fetch('/admin/users/delete', {
+                const response = await fetch('<?= \App\Core\App::url('/admin/users/delete') ?>', {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({id: id})
                 });
                 if ((await response.json()).success) location.reload();

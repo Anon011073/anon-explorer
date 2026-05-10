@@ -39,13 +39,15 @@
         </div>
 
         <div>
-            <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Public Folder Path (Optional)</label>
-            <input type="text" x-model="config.public_path" placeholder="Leave empty for default" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Public Folder Path (Absolute)</label>
+            <input type="text" x-model="config.public_path" placeholder="e.g. C:/laragon/www/public-files" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <p class="mt-1 text-[10px] text-slate-500 italic">Example: C:/laragon/www/zipply-drive/storage/public (No trailing slash)</p>
         </div>
 
         <div>
-            <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Default Root Path (Optional)</label>
-            <input type="text" x-model="config.root_path" placeholder="Leave empty for app root" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Root Browser Path (Absolute)</label>
+            <input type="text" x-model="config.root_path" placeholder="e.g. C:/laragon/www" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <p class="mt-1 text-[10px] text-slate-500 italic">This is the directory the Admin can browse. Example: C:/laragon/www</p>
         </div>
 
         <div>
@@ -70,8 +72,9 @@
         return {
             config: initial,
             async save() {
-                const response = await fetch('/admin/settings/save', {
+                const response = await fetch('<?= \App\Core\App::url('/admin/settings/save') ?>', {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(this.config)
                 });
                 if ((await response.json()).success) {
