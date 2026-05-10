@@ -44,6 +44,11 @@ class InstallController {
 
         file_put_contents(__DIR__ . '/../../storage/install.lock', date('Y-m-d H:i:s'));
 
-        return json_encode(['success' => true]);
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+            return json_encode(['success' => true]);
+        }
+
+        header('Location: ' . App::url('/login'));
+        exit;
     }
 }
