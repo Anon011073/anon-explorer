@@ -19,7 +19,7 @@ class App {
     }
 
     public static function url($path = '') {
-        $base = self::get('base_path');
+        $base = rtrim(self::get('base_url') ?? '', '/');
         return $base . '/' . ltrim($path, '/');
     }
 }

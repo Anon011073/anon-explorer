@@ -85,7 +85,7 @@ class ShareController {
 
         if ($share && password_verify($password, $share['password'])) {
             $_SESSION['share_auth_' . $token] = true;
-            header('Location: /s/' . $token);
+            header('Location: ' . App::url('/s/' . $token));
             exit;
         }
 

@@ -3,11 +3,12 @@
 namespace App\Middleware;
 
 use App\Services\AuthService;
+use App\Core\App;
 
 class AuthMiddleware {
     public static function handle() {
         if (!AuthService::check()) {
-            header('Location: /login');
+            header('Location: ' . App::url('/login'));
             exit;
         }
     }

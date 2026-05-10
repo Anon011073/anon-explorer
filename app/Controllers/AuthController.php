@@ -11,7 +11,7 @@ use App\Core\CSRF;
 class AuthController {
     public function showLogin() {
         if (AuthService::check()) {
-            header('Location: /');
+            header('Location: ' . App::url('/'));
             exit;
         }
         return View::render('auth/login');
@@ -25,7 +25,7 @@ class AuthController {
         $password = $_POST['password'] ?? '';
 
         if (AuthService::attempt($username, $password)) {
-            header('Location: /');
+            header('Location: ' . App::url('/'));
             exit;
         }
 
@@ -34,7 +34,7 @@ class AuthController {
 
     public function logout() {
         AuthService::logout();
-        header('Location: /login');
+        header('Location: ' . App::url('/login'));
         exit;
     }
 
@@ -69,7 +69,7 @@ class AuthController {
         $stmt = $db->prepare("INSERT INTO users (username, password, role, storage_limit) VALUES (?, ?, 'user', ?)");
         $stmt->execute([$username, $hashed, $limit]);
 
-        header('Location: /login');
+        header('Location: ' . App::url('/login'));
         exit;
     }
 }

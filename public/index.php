@@ -21,9 +21,29 @@ $container->set('config', [
     'uploads_path' => __DIR__ . '/../storage/uploads',
 ]);
 
+// --- Robust Subdirectory Detection ---
+$scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+$basePath = str_ireplace(['/public/index.php', '/index.php'], '', $scriptName);
+$basePath = rtrim($basePath, '/');
+if ($basePath === '/' || $basePath === '.') $basePath = '';
+
+$container->set('base_path', $basePath);
+
+// Base URL for redirects and assets
+$protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$baseUrl = $protocol . '://' . $host . $basePath;
+$container->set('base_url', $baseUrl);
+
+App::setContainer($container);
+// -------------------------------------
+
 // Database Connection (Only if installed)
 if (file_exists(__DIR__ . '/../storage/install.lock')) {
     try {
+        if (!extension_loaded('pdo_sqlite')) {
+            throw new Exception("PDO SQLite extension is not enabled in your PHP configuration.");
+        }
         $dbPath = $container->get('config')['db_path'];
         $pdo = new PDO("sqlite:" . $dbPath);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -31,9 +51,35 @@ if (file_exists(__DIR__ . '/../storage/install.lock')) {
         $container->set('db', $pdo);
         \App\Core\Database::init($pdo);
         \App\Core\Settings::load($pdo);
-    } catch (PDOException $e) {
-        die("Could not connect to the database: " . $e->getMessage());
+    } catch (Exception $e) {
+        if (str_contains($_SERVER['REQUEST_URI'] ?? '', '/api/')) {
+            header('Content-Type: application/json');
+            die(json_encode(['success' => false, 'message' => $e->getMessage()]));
+        }
+        die("<div style='font-family:sans-serif;padding:2rem;background:#fef2f2;color:#991b1b;border:1px solid #f87171;border-radius:0.5rem;max-width:600px;margin:2rem auto;'>
+            <h3 style='margin-top:0'>System Error</h3>
+            <p>" . htmlspecialchars($e->getMessage()) . "</p>
+        </div>");
     }
+}
+
+// Prepare URI for routing
+$uri = $_SERVER['REQUEST_URI'] ?? '/';
+if (false !== $pos = strpos($uri, '?')) {
+    $uri = substr($uri, 0, $pos);
+}
+$uri = rawurldecode($uri);
+
+// Remove basePath from URI for routing
+if ($basePath !== '' && strpos($uri, $basePath) === 0) {
+    $uri = substr($uri, strlen($basePath));
+}
+if ($uri === '' || $uri === false) $uri = '/';
+
+// Check for installer
+if (!file_exists(__DIR__ . '/../storage/install.lock') && $uri !== '/install') {
+    header('Location: ' . $baseUrl . '/install');
+    exit;
 }
 
 // Router Setup
@@ -78,47 +124,13 @@ $dispatcher = FastRoute\simpleDispatcher(function(FastRoute\RouteCollector $r) {
 
 $container->set('router', $dispatcher);
 
-// Check for installer
-if (!file_exists(__DIR__ . '/../storage/install.lock') && $_SERVER['REQUEST_URI'] !== '/install') {
-    header('Location: /install');
-    exit;
-}
-
-// Handle the request
-$httpMethod = $_SERVER['REQUEST_METHOD'];
-$uri = $_SERVER['REQUEST_URI'];
-
-// Strip query string (?foo=bar) and decode URI
-if (false !== $pos = strpos($uri, '?')) {
-    $uri = substr($uri, 0, $pos);
-}
-$uri = rawurldecode($uri);
-
-// For subdirectory support (like in Laragon/XAMPP)
-$scriptName = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
-$basePath = ($scriptName === '/' || $scriptName === '\\') ? '' : $scriptName;
-
-if ($basePath !== '' && strpos($uri, $basePath) === 0) {
-    $uri = substr($uri, strlen($basePath));
-}
-if ($uri === '') $uri = '/';
-
-$container->set('base_path', $basePath);
-
-App::setContainer($container);
-
-// Check for installer
-$installPath = $basePath . '/install';
-if (!file_exists(__DIR__ . '/../storage/install.lock') && $uri !== '/install') {
-    header('Location: ' . $installPath);
-    exit;
-}
-
+$httpMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $routeInfo = $dispatcher->dispatch($httpMethod, $uri);
+
 switch ($routeInfo[0]) {
     case FastRoute\Dispatcher::NOT_FOUND:
         http_response_code(404);
-        echo '404 Not Found';
+        echo "404 Not Found (URI: " . htmlspecialchars($uri) . ")";
         break;
     case FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
         $allowedMethods = $routeInfo[1];

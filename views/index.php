@@ -369,7 +369,7 @@
         function app() {
             return {
                 viewMode: 'grid',
-                currentPath: '',
+                currentPath: '', basePath: '<?= AppCoreApp::url('') ?>',
                 context: 'private',
                 theme: '<?= \App\Core\Settings::get('theme', 'dark') ?>',
                 isAdmin: <?= \App\Services\AuthService::isAdmin() ? 'true' : 'false' ?>,
@@ -396,7 +396,7 @@
                 },
 
                 async fetchFiles() {
-                    const response = await fetch(`/api/files?path=${encodeURIComponent(this.currentPath)}&context=${this.context}`);
+                    const response = await fetch(`<?= AppCoreApp::url('/api/files') ?>?path=${encodeURIComponent(this.currentPath)}&context=${this.context}`);
                     const result = await response.json();
                     if (result.success) {
                         this.items = result.data;
@@ -441,13 +441,13 @@
                             this.openEditor(item);
                         } else {
                             // Direct download or other preview
-                            window.open(`/api/files/download-direct?path=${encodeURIComponent(item.path)}&context=${this.context}`);
+                            window.open(`<?= AppCoreApp::url('/api/files') ?>/download-direct?path=${encodeURIComponent(item.path)}&context=${this.context}`);
                         }
                     }
                 },
 
                 async copyToMySpace(item) {
-                    const response = await fetch('/api/files/copy-to-space?context=public', {
+                    const response = await fetch('<?= AppCoreApp::url('/api/files') ?>/copy-to-space?context=public', {
                         method: 'POST',
                         body: JSON.stringify({ path: item.path })
                     });
@@ -459,7 +459,7 @@
 
                 async copyToMySpaceSelected() {
                     for (const item of this.selected) {
-                        await fetch('/api/files/copy-to-space?context=public', {
+                        await fetch('<?= AppCoreApp::url('/api/files') ?>/copy-to-space?context=public', {
                             method: 'POST',
                             body: JSON.stringify({ path: item.path })
                         });
@@ -470,7 +470,7 @@
 
                 async openEditor(item) {
                     this.editingItem = item;
-                    const response = await fetch(`/api/files/content?path=${encodeURIComponent(item.path)}&context=${this.context}`);
+                    const response = await fetch(`<?= AppCoreApp::url('/api/files') ?>/content?path=${encodeURIComponent(item.path)}&context=${this.context}`);
                     const result = await response.json();
                     if (result.success) {
                         this.showEditorModal = true;
@@ -511,7 +511,7 @@
 
                 async saveFile() {
                     const content = this.editor.getValue();
-                    const response = await fetch(`/api/files/save?context=${this.context}`, {
+                    const response = await fetch(`<?= AppCoreApp::url('/api/files') ?>/save?context=${this.context}`, {
                         method: 'POST',
                         body: JSON.stringify({
                             path: this.editingItem.path,
@@ -557,7 +557,7 @@
                     const name = prompt('Enter folder name:');
                     if (!name) return;
 
-                    const response = await fetch(`/api/files/create-folder?context=${this.context}`, {
+                    const response = await fetch(`<?= AppCoreApp::url('/api/files') ?>/create-folder?context=${this.context}`, {
                         method: 'POST',
                         body: JSON.stringify({ path: this.currentPath, name: name })
                     });
@@ -571,7 +571,7 @@
                     if (!confirm('Are you sure you want to delete ' + this.selected.length + ' item(s)?')) return;
 
                     for (const item of this.selected) {
-                        await fetch(`/api/files/delete?context=${this.context}`, {
+                        await fetch(`<?= AppCoreApp::url('/api/files') ?>/delete?context=${this.context}`, {
                             method: 'POST',
                             body: JSON.stringify({ path: item.path })
                         });
@@ -584,7 +584,7 @@
                     const name = prompt('Enter ZIP name:', 'archive.zip');
                     if (!name) return;
 
-                    const response = await fetch(`/api/files/zip?context=${this.context}`, {
+                    const response = await fetch(`<?= AppCoreApp::url('/api/files') ?>/zip?context=${this.context}`, {
                         method: 'POST',
                         body: JSON.stringify({
                             paths: this.selected.map(i => i.path),
@@ -626,7 +626,7 @@
                     formData.append('path', this.currentPath);
 
                     const xhr = new XMLHttpRequest();
-                    xhr.open('POST', `/api/files/upload?context=${this.context}`, true);
+                    xhr.open('POST', `<?= AppCoreApp::url('/api/files') ?>/upload?context=${this.context}`, true);
 
                     xhr.upload.onprogress = (e) => {
                         if (e.lengthComputable) {
@@ -654,7 +654,7 @@
                     const newName = prompt('Rename to:', item.name);
                     if (!newName || newName === item.name) return;
 
-                    const response = await fetch(`/api/files/rename?context=${this.context}`, {
+                    const response = await fetch(`<?= AppCoreApp::url('/api/files') ?>/rename?context=${this.context}`, {
                         method: 'POST',
                         body: JSON.stringify({ old_path: item.path, new_name: newName })
                     });
@@ -673,7 +673,7 @@
                 },
 
                 async generateShare() {
-                    const response = await fetch(`/api/share/create?context=${this.context}`, {
+                    const response = await fetch(`<?= AppCoreApp::url('/api/share') ?>/create?context=${this.context}`, {
                         method: 'POST',
                         body: JSON.stringify({
                             path: this.itemToShare.path,

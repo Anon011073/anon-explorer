@@ -44,7 +44,7 @@ class ProfileController {
             $db->prepare("UPDATE users SET avatar = ? WHERE id = ?")->execute(['/uploads/avatars/' . $avatarName, $user['id']]);
         }
 
-        header('Location: /profile');
+        header('Location: ' . App::url('/profile'));
         exit;
     }
 }
