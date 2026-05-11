@@ -1,0 +1,6 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redirect all requests to public/index.php
+    RewriteRule ^(.*)$ public/index.php [L,QSA]
+</IfModule>
