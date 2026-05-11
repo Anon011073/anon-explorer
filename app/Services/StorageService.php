@@ -12,9 +12,14 @@ class StorageService {
 
     public function __construct($path = null) {
         $this->rootPath = $path ?: App::config('uploads_path');
+
+        // Normalize path for Windows
+        $this->rootPath = str_replace('\\', '/', realpath($this->rootPath) ?: $this->rootPath);
+
         if (!is_dir($this->rootPath)) {
             mkdir($this->rootPath, 0777, true);
         }
+
         $adapter = new LocalFilesystemAdapter($this->rootPath);
         $this->filesystem = new Filesystem($adapter);
     }
@@ -71,6 +76,7 @@ class StorageService {
     }
 
     public function getFullPath($path) {
-        return $this->rootPath . '/' . ltrim($path, '/');
+        $path = ltrim($path, '/\\');
+        return $this->rootPath . ($path ? '/' . $path : '');
     }
 }

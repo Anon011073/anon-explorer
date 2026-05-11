@@ -48,6 +48,17 @@ class Database {
             $db->exec($query);
         }
 
+        // Migration: Add storage_context to shares if missing
+        try {
+            $stmt = $db->query("PRAGMA table_info(shares)");
+            $columns = $stmt->fetchAll(\PDO::FETCH_COLUMN, 1);
+            if (!in_array('storage_context', $columns)) {
+                $db->exec("ALTER TABLE shares ADD COLUMN storage_context TEXT NOT NULL DEFAULT 'private'");
+            }
+        } catch (\Exception $e) {
+            // Ignore if table doesn't exist yet
+        }
+
         // Insert default admin if not exists
         $stmt = $db->prepare("SELECT COUNT(*) FROM users WHERE role = 'admin'");
         $stmt->execute();

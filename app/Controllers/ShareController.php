@@ -69,7 +69,8 @@ class ShareController {
         $storage = $this->getStorageForShare($share);
 
         if (!$storage->exists($share['file_path'])) {
-            return "File no longer exists.";
+            // Debug info for the user if needed, but for now just the message
+            return "File no longer exists. (Context: " . $share['storage_context'] . ")";
         }
 
         $meta = $storage->getMetadata($share['file_path']);
