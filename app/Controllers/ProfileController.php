@@ -41,7 +41,7 @@ class ProfileController {
             if (!is_dir($path)) mkdir($path, 0777, true);
 
             move_uploaded_file($_FILES['avatar']['tmp_name'], $path . '/' . $avatarName);
-            $db->prepare("UPDATE users SET avatar = ? WHERE id = ?")->execute(['/uploads/avatars/' . $avatarName, $user['id']]);
+            $db->prepare("UPDATE users SET avatar = ? WHERE id = ?")->execute(['uploads/avatars/' . $avatarName, $user['id']]);
         }
 
         header('Location: ' . App::url('/profile'));

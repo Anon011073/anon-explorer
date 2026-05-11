@@ -7,11 +7,11 @@
             <p class="text-slate-500 text-sm">Update your account settings and profile picture.</p>
         </div>
 
-        <form action="/profile" method="POST" enctype="multipart/form-data" class="p-8 space-y-6">
+        <form action="<?= \App\Core\App::url('/profile') ?>" method="POST" enctype="multipart/form-data" class="p-8 space-y-6">
             <div class="flex items-center gap-6 mb-8">
                 <div class="shrink-0">
                     <?php if ($user['avatar']): ?>
-                        <img class="h-20 w-20 object-cover rounded-full ring-2 ring-blue-600" src="<?= $user['avatar'] ?>" alt="Avatar">
+                        <img class="h-20 w-20 object-cover rounded-full ring-2 ring-blue-600" src="<?= \App\Core\App::url('/' . $user['avatar']) ?>" alt="Avatar">
                     <?php else: ?>
                         <div class="h-20 w-20 rounded-full bg-slate-800 flex items-center justify-center text-2xl font-bold text-blue-500 ring-2 ring-slate-700">
                             <?= strtoupper(substr($user['username'], 0, 1)) ?>
@@ -53,7 +53,7 @@
     </div>
 
     <div class="mt-8 flex justify-center">
-        <a href="/" class="text-sm font-medium text-slate-500 hover:text-white transition-colors flex items-center gap-2">
+        <a href="<?= \App\Core\App::url('/') ?>" class="text-sm font-medium text-slate-500 hover:text-white transition-colors flex items-center gap-2">
             <i data-lucide="arrow-left" class="w-4 h-4"></i>
             Back to My Files
         </a>

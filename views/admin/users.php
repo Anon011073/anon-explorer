@@ -16,7 +16,7 @@
             <tr class="hover:bg-slate-800/30 transition-colors">
                 <td class="px-6 py-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center text-xs font-bold"><?= strtoupper(substr($user['username'], 0, 1)) ?></div>
+                        <div class="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center text-xs font-bold text-white"><?= strtoupper(substr($user['username'], 0, 1)) ?></div>
                         <span class="text-sm font-medium text-white"><?= htmlspecialchars($user['username']) ?></span>
                     </div>
                 </td>
@@ -52,7 +52,7 @@
     <template x-if="editingUser">
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
             <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl">
-                <h3 class="text-lg font-bold mb-4">Edit User: <span x-text="editingUser.username"></span></h3>
+                <h3 class="text-lg font-bold mb-4 text-white">Edit User: <span x-text="editingUser.username"></span></h3>
                 <div class="space-y-4">
                     <div>
                         <label class="block text-xs font-medium text-slate-500 mb-1 uppercase tracking-wider">Role</label>
@@ -64,7 +64,7 @@
                     <div>
                         <label class="block text-xs font-medium text-slate-500 mb-1 uppercase tracking-wider">Storage Limit (Bytes)</label>
                         <input type="number" x-model="editingUser.storage_limit" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-blue-500">
-                        <p class="mt-1 text-[10px] text-slate-500">1 GB = 1073741824 bytes</p>
+                        <p class="mt-1 text-[10px] text-slate-500 italic">1 GB = 1073741824 bytes</p>
                     </div>
                     <div class="flex gap-3 mt-6">
                         <button @click="saveUser()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition-colors">Save Changes</button>
