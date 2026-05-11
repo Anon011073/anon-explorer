@@ -6,6 +6,7 @@ use App\Core\App;
 use App\Core\View;
 use App\Services\AuthService;
 use App\Middleware\AuthMiddleware;
+use App\Services\LogService;
 
 class ProfileController {
     public function __construct() {
