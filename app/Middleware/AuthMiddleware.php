@@ -7,8 +7,8 @@ use App\Core\App;
 
 class AuthMiddleware {
     public static function handle() {
-        if (!AuthService::check()) {
-            header('Location: ' . App::url('/login'));
+        if (!AuthService::check() || !AuthService::user()) {
+            header('Location: ' . App::url('/logout'));
             exit;
         }
     }

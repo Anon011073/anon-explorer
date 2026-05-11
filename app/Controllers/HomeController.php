@@ -15,11 +15,15 @@ class HomeController {
         $userPath = App::config('uploads_path') . '/user_' . $user['id'];
         $usage = 0;
         if (is_dir($userPath)) {
-            $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($userPath));
-            foreach ($files as $file) {
-                if ($file->isFile()) {
-                    $usage += $file->getSize();
+            try {
+                $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($userPath));
+                foreach ($files as $file) {
+                    if ($file->isFile()) {
+                        $usage += $file->getSize();
+                    }
                 }
+            } catch (\Exception $e) {
+                // Ignore directory traversal errors
             }
         }
 

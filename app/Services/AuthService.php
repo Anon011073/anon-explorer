@@ -32,7 +32,8 @@ class AuthService {
         $db = App::get('db');
         $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
         $stmt->execute([Session::get('user_id')]);
-        return $stmt->fetch();
+        $user = $stmt->fetch();
+        return $user ?: null;
     }
 
     public static function logout() {
