@@ -6,6 +6,7 @@ use App\Core\App;
 use App\Core\View;
 use App\Core\Settings;
 use App\Middleware\AuthMiddleware;
+use App\Services\LogService;
 
 class AdminController {
     public function __construct() {
@@ -16,16 +17,31 @@ class AdminController {
         $db = App::get('db');
         $userCount = $db->query("SELECT COUNT(*) FROM users")->fetchColumn();
         $shareCount = $db->query("SELECT COUNT(*) FROM shares")->fetchColumn();
+        $logs = LogService::getRecent(20);
 
         return View::render('admin/dashboard', [
             'userCount' => $userCount,
-            'shareCount' => $shareCount
+            'shareCount' => $shareCount,
+            'logs' => $logs
         ]);
     }
 
     public function users() {
         $db = App::get('db');
         $users = $db->query("SELECT * FROM users ORDER BY created_at DESC")->fetchAll();
+
+        foreach ($users as &$user) {
+            $usage = 0;
+            $userPath = App::config('uploads_path') . '/user_' . $user['id'];
+            if (is_dir($userPath)) {
+                $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($userPath));
+                foreach ($it as $file) {
+                    if ($file->isFile()) $usage += $file->getSize();
+                }
+            }
+            $user['usage'] = $usage;
+        }
+
         return View::render('admin/users', ['users' => $users]);
     }
 
@@ -61,6 +77,7 @@ class AdminController {
             'public_path' => Settings::get('public_path', ''),
             'root_path' => Settings::get('root_path', ''),
             'hide_system_files' => Settings::get('hide_system_files', '1'),
+            'allowed_extensions' => Settings::get('allowed_extensions', ''),
             'theme' => Settings::get('theme', 'dark'),
         ];
         return View::render('admin/settings', ['settings' => $settings]);
@@ -75,5 +92,20 @@ class AdminController {
         }
 
         return json_encode(['success' => true]);
+    }
+
+    public function logs() {
+        $action = $_GET['action'] ?? null;
+        $page = (int)($_GET['page'] ?? 1);
+        $limit = 20;
+        $offset = ($page - 1) * $limit;
+
+        $logs = LogService::getRecent($limit, $action, $offset);
+
+        return View::render('admin/logs', [
+            'logs' => $logs,
+            'action' => $action,
+            'page' => $page
+        ]);
     }
 }

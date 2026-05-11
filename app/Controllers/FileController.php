@@ -7,6 +7,7 @@ use App\Services\AuthService;
 use App\Middleware\AuthMiddleware;
 use App\Core\App;
 use App\Core\Settings;
+use App\Services\LogService;
 
 class FileController {
     protected $storage;
@@ -40,6 +41,7 @@ class FileController {
 
     public function list($vars) {
         $path = $_GET['path'] ?? '';
+        // Basic path traversal protection
         $path = str_replace('..', '', $path);
         $path = ltrim($path, '/');
 
@@ -52,18 +54,19 @@ class FileController {
             foreach ($contents as $item) {
                 $name = basename($item->path());
 
-                if ($this->context === 'root' && !AuthService::isAdmin()) continue;
+                if ($this->context === 'root' && !AuthService::isAdmin()) continue; // extra safety
                 if ($this->context === 'root' && $hideSystem && in_array($name, $systemFiles)) continue;
 
                 $items[] = [
                     'name' => $name,
                     'path' => $item->path(),
-                    'type' => $item->type(),
+                    'type' => $item->type(), // 'file' or 'dir'
                     'size' => $item instanceof \League\Flysystem\FileAttributes ? $item->fileSize() : 0,
                     'last_modified' => $item instanceof \League\Flysystem\StorageAttributes ? $item->lastModified() : 0,
                 ];
             }
 
+            // Sort: folders first, then by name
             usort($items, function($a, $b) {
                 if ($a['type'] === $b['type']) {
                     return strcasecmp($a['name'], $b['name']);
@@ -80,13 +83,16 @@ class FileController {
     }
 
     public function createFolder() {
+        header('Content-Type: application/json');
         $data = json_decode(file_get_contents('php://input'), true);
         $path = $data['path'] ?? '';
         $name = $data['name'] ?? 'New Folder';
+
         $fullPath = trim($path . '/' . $name, '/');
 
         try {
             $this->storage->createDirectory($fullPath);
+            LogService::log('create_folder', "Created folder: $fullPath");
             return json_encode(['success' => true]);
         } catch (\Exception $e) {
             return json_encode(['success' => false, 'message' => $e->getMessage()]);
@@ -94,16 +100,22 @@ class FileController {
     }
 
     public function delete() {
+        header('Content-Type: application/json');
         $data = json_decode(file_get_contents('php://input'), true);
         $path = $data['path'] ?? '';
 
         try {
+            // Check if it's a file or directory
+            // Flysystem 3.x listContents is easier or we can just try both
             if ($this->storage->exists($path)) {
+                // In Flysystem 3 we might need to know if it is a dir or file
+                // But for now let's use the metadata or catch error
                 try {
                     $this->storage->delete($path);
                 } catch (\Exception $e) {
                     $this->storage->deleteDirectory($path);
                 }
+                LogService::log('delete', "Deleted: $path");
             }
             return json_encode(['success' => true]);
         } catch (\Exception $e) {
@@ -112,6 +124,7 @@ class FileController {
     }
 
     public function rename() {
+        header('Content-Type: application/json');
         $data = json_decode(file_get_contents('php://input'), true);
         $oldPath = $data['old_path'] ?? '';
         $newName = $data['new_name'] ?? '';
@@ -121,6 +134,7 @@ class FileController {
 
         try {
             $this->storage->move($oldPath, $newPath);
+            LogService::log('rename', "Renamed $oldPath to $newName");
             return json_encode(['success' => true]);
         } catch (\Exception $e) {
             return json_encode(['success' => false, 'message' => $e->getMessage()]);
@@ -128,15 +142,26 @@ class FileController {
     }
 
     public function upload() {
+        header('Content-Type: application/json');
         $path = $_POST['path'] ?? '';
         if (isset($_FILES['file'])) {
             $file = $_FILES['file'];
+
+            $allowed = Settings::get('allowed_extensions');
+            if ($allowed) {
+                $allowedList = array_map('trim', explode(',', strtolower($allowed)));
+                $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+                if (!in_array($ext, $allowedList)) {
+                    return json_encode(['success' => false, 'message' => "File type .$ext not allowed"]);
+                }
+            }
             $target = trim($path . '/' . $file['name'], '/');
 
             try {
                 $stream = fopen($file['tmp_name'], 'r+');
                 $this->storage->writeStream($target, $stream);
                 fclose($stream);
+                LogService::log('upload', "Uploaded: $target");
                 return json_encode(['success' => true]);
             } catch (\Exception $e) {
                 return json_encode(['success' => false, 'message' => $e->getMessage()]);
@@ -146,6 +171,7 @@ class FileController {
     }
 
     public function zip() {
+        header('Content-Type: application/json');
         $data = json_decode(file_get_contents('php://input'), true);
         $paths = $data['paths'] ?? [];
         $name = $data['name'] ?? 'archive.zip';
@@ -155,16 +181,11 @@ class FileController {
             return json_encode(['success' => false, 'message' => 'No items selected']);
         }
 
-        if (!class_exists('ZipArchive')) {
-            return json_encode(['success' => false, 'message' => 'ZipArchive extension is not enabled on this server.']);
-        }
-
         $zip = new \ZipArchive();
         $zipName = trim($currentPath . '/' . $name, '/');
         $tempZip = tempnam(sys_get_temp_dir(), 'zip');
 
-        $res = $zip->open($tempZip, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-        if ($res === TRUE) {
+        if ($zip->open($tempZip, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === TRUE) {
             foreach ($paths as $path) {
                 $fullPath = $this->storage->getFullPath($path);
                 if (is_dir($fullPath)) {
@@ -193,11 +214,11 @@ class FileController {
                 unlink($tempZip);
                 return json_encode(['success' => true]);
             } catch (\Exception $e) {
-                return json_encode(['success' => false, 'message' => 'Failed to save ZIP: ' . $e->getMessage()]);
+                return json_encode(['success' => false, 'message' => $e->getMessage()]);
             }
         }
 
-        return json_encode(['success' => false, 'message' => 'Could not create ZIP archive. Error code: ' . $res]);
+        return json_encode(['success' => false, 'message' => 'Could not create ZIP']);
     }
 
     public function getContent() {
@@ -211,12 +232,14 @@ class FileController {
     }
 
     public function save() {
+        header('Content-Type: application/json');
         $data = json_decode(file_get_contents('php://input'), true);
         $path = $data['path'] ?? '';
         $content = $data['content'] ?? '';
 
         try {
             $this->storage->write($path, $content);
+            LogService::log('edit', "Edited file: $path");
             return json_encode(['success' => true]);
         } catch (\Exception $e) {
             return json_encode(['success' => false, 'message' => $e->getMessage()]);
@@ -224,6 +247,7 @@ class FileController {
     }
 
     public function copyToSpace() {
+        header('Content-Type: application/json');
         $data = json_decode(file_get_contents('php://input'), true);
         $path = $data['path'] ?? '';
 
@@ -240,6 +264,9 @@ class FileController {
             $destination = basename($path);
 
             if (is_dir($fullSourcePath)) {
+                // Flysystem copy is for files, for directories we might need to recursive copy
+                // For simplicity let's implement a small helper or use Zip and Extract?
+                // Or just loop through files if not too many.
                 $this->recursiveCopy($fullSourcePath, $userPath . '/' . $destination);
             } else {
                 $stream = fopen($fullSourcePath, 'r');
@@ -276,23 +303,6 @@ class FileController {
         header('Content-Description: File Transfer');
         header('Content-Type: application/octet-stream');
         header('Content-Disposition: attachment; filename="' . basename($fullPath) . '"');
-        header('Content-Length: ' . filesize($fullPath));
-        readfile($fullPath);
-        exit;
-    }
-
-    public function thumbnail() {
-        $path = $_GET['path'] ?? '';
-        $fullPath = $this->storage->getFullPath($path);
-
-        if (!file_exists($fullPath)) die("File not found.");
-
-        $mime = mime_content_type($fullPath);
-        if (strpos($mime, 'image/') !== 0) {
-            die("Not an image.");
-        }
-
-        header('Content-Type: ' . $mime);
         header('Content-Length: ' . filesize($fullPath));
         readfile($fullPath);
         exit;

@@ -20,6 +20,12 @@
             </button>
         </div>
 
+        <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Allowed File Extensions</label>
+            <input type="text" x-model="config.allowed_extensions" placeholder="e.g. jpg,png,pdf,zip" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <p class="mt-1 text-[10px] text-slate-500 italic">Comma-separated list (e.g. jpg,png). Leave empty for all.</p>
+        </div>
+
         <div class="flex items-center justify-between p-4 bg-slate-950 rounded-xl border border-slate-800">
             <div>
                 <p class="text-sm font-medium text-white">Hide System Files</p>
@@ -34,8 +40,8 @@
         </div>
 
         <div>
-            <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Default Storage Limit (Bytes)</label>
-            <input type="number" x-model="config.default_storage_limit" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Default Storage Limit (GB)</label>
+            <input type="number" step="0.1" :value="config.default_storage_limit / 1024 / 1024 / 1024" @input="config.default_storage_limit = $event.target.value * 1024 * 1024 * 1024" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
 
         <div>

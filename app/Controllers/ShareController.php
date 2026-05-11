@@ -5,11 +5,13 @@ namespace App\Controllers;
 use App\Core\App;
 use App\Core\View;
 use App\Services\StorageService;
+use App\Services\LogService;
 
 class ShareController {
     public function create() {
         $data = json_decode(file_get_contents('php://input'), true);
         $path = $data['path'] ?? '';
+        $context = $_GET['context'] ?? 'private';
         $password = $data['password'] ?? null;
         $expires = $data['expires'] ?? null; // in hours
         $max_downloads = $data['max_downloads'] ?? null;
@@ -29,11 +31,12 @@ class ShareController {
         $user_id = $_SESSION['user_id'] ?? null;
 
         $db = App::get('db');
-        $stmt = $db->prepare("INSERT INTO shares (file_path, user_id, token, password, expires_at, max_downloads) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$path, $user_id, $token, $hashed_password, $expires_at, $max_downloads]);
+        $stmt = $db->prepare("INSERT INTO shares (file_path, storage_context, user_id, token, password, expires_at, max_downloads) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$path, $context, $user_id, $token, $hashed_password, $expires_at, $max_downloads]);
 
-        $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";
-        $shareLink = $baseUrl . "/s/" . $token;
+        LogService::log('share', "Shared file ($context): $path");
+
+        $shareLink = App::url("/s/" . $token, true);
 
         return json_encode(['success' => true, 'link' => $shareLink]);
     }
@@ -63,8 +66,7 @@ class ShareController {
         }
 
         // Get file info
-        $userPath = App::config('uploads_path') . '/user_' . $share['user_id'];
-        $storage = new StorageService($userPath);
+        $storage = $this->getStorageForShare($share);
 
         if (!$storage->exists($share['file_path'])) {
             return "File no longer exists.";
@@ -102,14 +104,15 @@ class ShareController {
         if (!$share) die("Invalid share.");
         if ($share['password'] && !isset($_SESSION['share_auth_' . $token])) die("Unauthorized.");
 
-        $userPath = App::config('uploads_path') . '/user_' . $share['user_id'];
-        $storage = new StorageService($userPath);
+        $storage = $this->getStorageForShare($share);
         $fullPath = $storage->getFullPath($share['file_path']);
 
         if (!file_exists($fullPath)) die("File not found.");
 
         // Increment download count
         $db->prepare("UPDATE shares SET download_count = download_count + 1 WHERE id = ?")->execute([$share['id']]);
+
+        LogService::log('share_download', "File downloaded via share: {$share['file_path']}");
 
         header('Content-Description: File Transfer');
         header('Content-Type: application/octet-stream');
@@ -120,5 +123,22 @@ class ShareController {
         header('Content-Length: ' . filesize($fullPath));
         readfile($fullPath);
         exit;
+    }
+
+    protected function getStorageForShare($share) {
+        $context = $share['storage_context'] ?? 'private';
+
+        if ($context === 'public') {
+            $publicPath = \App\Core\Settings::get('public_path');
+            if (!$publicPath) $publicPath = App::config('uploads_path') . '/public';
+            return new StorageService($publicPath);
+        } elseif ($context === 'root') {
+            $rootPath = \App\Core\Settings::get('root_path');
+            if (!$rootPath) $rootPath = realpath(__DIR__ . '/../../');
+            return new StorageService($rootPath);
+        } else {
+            $userPath = App::config('uploads_path') . '/user_' . $share['user_id'];
+            return new StorageService($userPath);
+        }
     }
 }

@@ -18,8 +18,12 @@ class App {
         return $config[$key] ?? $default;
     }
 
-    public static function url($path = '') {
-        $base = rtrim(self::get('base_url') ?? '', '/');
+    public static function url($path = '', $absolute = false) {
+        if ($absolute) {
+            $base = self::get('base_url');
+            return $base . '/' . ltrim($path, '/');
+        }
+        $base = self::get('base_path');
         return $base . '/' . ltrim($path, '/');
     }
 }

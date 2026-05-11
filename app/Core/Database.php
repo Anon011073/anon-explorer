@@ -19,6 +19,7 @@ class Database {
             "CREATE TABLE IF NOT EXISTS shares (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 file_path TEXT NOT NULL,
+                storage_context TEXT NOT NULL DEFAULT 'private',
                 user_id INTEGER,
                 token TEXT UNIQUE NOT NULL,
                 password TEXT,
@@ -31,6 +32,15 @@ class Database {
             "CREATE TABLE IF NOT EXISTS settings (
                 key TEXT PRIMARY KEY,
                 value TEXT
+            )",
+            "CREATE TABLE IF NOT EXISTS activity_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                action TEXT NOT NULL,
+                details TEXT,
+                ip_address TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
             )"
         ];
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $title ?? 'Admin - Zipply-Drive' ?></title>
+    <title><?= $title ?? 'Admin - ' . \App\Core\Settings::get('app_name', 'Zipply-Drive') ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -21,7 +21,7 @@
                 <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                     <i data-lucide="shield-check" class="w-5 h-5 text-white"></i>
                 </div>
-                <span class="font-bold text-xl tracking-tight text-white">Zipply Admin</span>
+                <span class="font-bold text-xl tracking-tight text-white"><?= \App\Core\Settings::get('app_name', 'Zipply') ?> Admin</span>
             </div>
 
             <nav class="flex-1 overflow-y-auto p-4 space-y-2">

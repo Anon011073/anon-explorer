@@ -33,15 +33,20 @@ class ProfileController {
             $stmt->execute([$username, $user['id']]);
         }
 
+        $_SESSION['username'] = $username;
+
         // Handle Avatar
         if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
-            $ext = pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION);
-            $avatarName = 'avatar_' . $user['id'] . '.' . $ext;
-            $path = __DIR__ . '/../../public/uploads/avatars';
-            if (!is_dir($path)) mkdir($path, 0777, true);
+            $ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
+            if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                $avatarName = 'avatar_' . $user['id'] . '.' . $ext;
+                $path = __DIR__ . '/../../public/uploads/avatars';
+                if (!is_dir($path)) mkdir($path, 0777, true);
 
-            move_uploaded_file($_FILES['avatar']['tmp_name'], $path . '/' . $avatarName);
-            $db->prepare("UPDATE users SET avatar = ? WHERE id = ?")->execute(['uploads/avatars/' . $avatarName, $user['id']]);
+                move_uploaded_file($_FILES['avatar']['tmp_name'], $path . '/' . $avatarName);
+                $db->prepare("UPDATE users SET avatar = ? WHERE id = ?")->execute(['/uploads/avatars/' . $avatarName, $user['id']]);
+                LogService::log('update_avatar', "Updated profile picture");
+            }
         }
 
         header('Location: ' . App::url('/profile'));
